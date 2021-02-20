@@ -1,32 +1,28 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import classNames from 'classnames';
-import { selectDateStart, start, stop } from '../../redux/recorder';
+import React, { useRef, useState, useEffect } from 'react';
 import './Recorder.css';
+import { useDispatch, useSelector } from 'react-redux';
+import cx from 'classnames';
+import { start, stop, selectDateStart } from '../../redux/recorder';
+import { addZero } from '../../lib/utils';
+import { createUserEvent } from '../../redux/user-events';
 
-const addZero = (number: number): string =>
-  number < 10 ? `0${number}` : `${number}`;
-
-interface RecorderProps {}
-
-const Recorder: React.FC<RecorderProps> = () => {
+const Recorder = () => {
   const dispatch = useDispatch();
   const dateStart = useSelector(selectDateStart);
-  const [, setCount] = useState<number>(0);
   const started = dateStart !== '';
-  const interval = useRef<number>(0);
+  let interval = useRef<number>(0);
+  const [, setCount] = useState<number>(0);
 
   const handleClick = () => {
     if (started) {
       window.clearInterval(interval.current);
-
+      dispatch(createUserEvent());
       dispatch(stop());
     } else {
       dispatch(start());
-      interval.current = window.setInterval(
-        () => setCount((prevCount) => prevCount + 1),
-        1000
-      );
+      interval.current = window.setInterval(() => {
+        setCount((count) => count + 1);
+      }, 1000);
     }
   };
 
@@ -45,8 +41,8 @@ const Recorder: React.FC<RecorderProps> = () => {
   seconds -= minutes * 60;
 
   return (
-    <div className={classNames('recorder', { 'recorder-started': started })}>
-      <button className="recorder-record" onClick={handleClick}>
+    <div className={cx('recorder', { 'recorder-started': started })}>
+      <button onClick={handleClick} className="recorder-record">
         <span></span>
       </button>
       <div className="recorder-counter">
